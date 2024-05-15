@@ -1,4 +1,4 @@
-module html2pdf
+module github.com/MhmoudGit/html2pdf
 
 go 1.22.0
 

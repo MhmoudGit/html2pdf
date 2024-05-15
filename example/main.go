@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"html2pdf"
+	"github.com/MhmoudGit/html2pdf"
 	"time"
 )
 
