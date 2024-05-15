@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
@@ -31,13 +33,23 @@ func (g *Generator[T]) CreatePdf() error {
 	l := launcher.New().Headless(true).Leakless(true)
 	g.browser = rod.New().ControlURL(l.MustLaunch()).MustConnect()
 	defer g.browser.MustClose()
-	
 
 	for i, file := range g.HtmlFiles {
 		defer file.Close()
 		pdfFilePath := fmt.Sprintf("./%s/output%d.pdf", g.OutputPath, i)
-		cd,_ := os.Getwd()
-		err := g.CapturePDF(g.browser,cd+file.Name(), pdfFilePath)
+
+		cd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("error getting current directory path : %v", err.Error())
+		}
+
+		filePath := filepath.Join(cd, file.Name())
+		filePath = strings.ReplaceAll(filePath, "\\", "/")
+
+		// Construct the URL using the file path
+		url := "file://" + filePath
+
+		err = g.CapturePDF(g.browser, url, pdfFilePath)
 		if err != nil {
 			return fmt.Errorf("error capturing PDF files: %v", err.Error())
 		}
