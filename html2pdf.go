@@ -71,7 +71,7 @@ func (g *Generator[T]) GenerateTemplates() error {
 }
 
 func (g *Generator[T]) CreateHtmlFile(id int) (*os.File, error) {
-	os.Mkdir(g.OutputPath, os.ModeAppend)
+	os.Mkdir(g.OutputPath, 0755)
 	name := fmt.Sprintf("./%s/output%d.html", g.OutputPath, id)
 	file, err := os.Create(name)
 	if err != nil {
