@@ -14,13 +14,14 @@ import (
 )
 
 type Generator[T any] struct {
-	OutputPath string             // directory path for generated data
-	FinalPdf   string             // the merged pdf name (make sure to include .pdf in the name)
-	Template   *template.Template // html template
-	Data       []T                // valid data for feeding the template
-	browser    *rod.Browser       // rod browser for auto generating pdf from html views
-	HtmlFiles  []*os.File         // list of generated html files
-	PdfFiles   []string           // list of generated pdf files
+	OutputPath     string             // directory path for generated data
+	FinalPdf       string             // the merged pdf name (make sure to include .pdf in the name)
+	Template       *template.Template // html template
+	Data           []T                // valid data for feeding the template
+	browser        *rod.Browser       // rod browser for auto generating pdf from html views
+	HtmlFiles      []*os.File         // list of generated html files
+	PdfFiles       []string           // list of generated pdf files
+	SingleHtmlFile bool               // If you want the template to be single file only
 }
 
 // Generate pdf file from multible html templates
@@ -67,6 +68,20 @@ func (g *Generator[T]) CreatePdf() error {
 
 // Generate html templates from the given data and save them into .g.OutputPath
 func (g *Generator[T]) GenerateTemplates() error {
+	if g.SingleHtmlFile {
+		file, err := g.CreateHtmlFile(1)
+		if err != nil {
+			return err
+		}
+		err = g.Template.Execute(file, g.Data)
+		if err != nil {
+			return fmt.Errorf("error generating templates: %v", err.Error())
+		}
+		g.HtmlFiles = append(g.HtmlFiles, file)
+		return nil
+	}
+
+	// for multible html files
 	for i, v := range g.Data {
 		file, err := g.CreateHtmlFile(i)
 		if err != nil {

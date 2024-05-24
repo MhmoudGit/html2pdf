@@ -25,12 +25,29 @@ var (
 </body>
 </html>
 `
+
+	// for single file test
+	singleTmpl = `
+<!DOCTYPE html>
+<html>
+<head>
+<title>Todo Information</title>
+</head>
+<body>
+{{range .}}
+<h1>{{.ID}}</h1>
+<p>{{.Item}}.</p>
+{{end}}
+</body>
+</html>
+`
 	// Create a temporary directory for testing
 	tempDir   = "files"
 	mergedPdf = "final.pdf"
 	g         = Generator[Todo]{
-		OutputPath: tempDir,
-		FinalPdf:   mergedPdf,
+		OutputPath:     tempDir,
+		FinalPdf:       mergedPdf,
+		SingleHtmlFile: true, // test for single html file only
 	}
 )
 
@@ -42,12 +59,20 @@ func TestGenerator(t *testing.T) {
 		{ID: 4, Item: "Fourth item"},
 	}
 
-	template, err := template.New("todo").Parse(tmpl)
-	if err != nil {
-		panic(err)
+	if g.SingleHtmlFile {
+		template, err := template.New("todo").Parse(singleTmpl)
+		if err != nil {
+			panic(err)
+		}
+		g.Template = template
+	} else {
+		template, err := template.New("todo").Parse(tmpl)
+		if err != nil {
+			panic(err)
+		}
+		g.Template = template
 	}
 
-	g.Template = template
 	g.Data = expectedTodos
 
 	result := g
@@ -74,17 +99,25 @@ func TestCreatePdf(t *testing.T) {
 		{ID: 4, Item: "Fourth item"},
 	}
 
-	template, err := template.New("todo").Parse(tmpl)
-	if err != nil {
-		t.Errorf("Error: %v", err)
+	if g.SingleHtmlFile {
+		template, err := template.New("todo").Parse(singleTmpl)
+		if err != nil {
+			panic(err)
+		}
+		g.Template = template
+	} else {
+		template, err := template.New("todo").Parse(tmpl)
+		if err != nil {
+			panic(err)
+		}
+		g.Template = template
 	}
-	g.Template = template
 	g.Data = todos
 
 	start := time.Now()
 
 	// test 1
-	err = g.CreatePdf()
+	err := g.CreatePdf()
 	if err != nil {
 		t.Errorf("Error creating PDF: %v", err)
 	}
@@ -99,6 +132,6 @@ func TestDeletingDataFolder(t *testing.T) {
 	}
 
 	if _, err := os.Stat(tempDir); !os.IsNotExist(err) {
-		t.Errorf("Error folder is not deleted", )
+		t.Errorf("Error folder is not deleted")
 	}
 }
