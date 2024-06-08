@@ -23,6 +23,7 @@ type Generator[T any] struct {
 	HtmlFiles      []*os.File         // list of generated html files
 	PdfFiles       []string           // list of generated pdf files
 	SingleHtmlFile bool               // If you want the template to be single file only
+	Linux          bool               // set this to true if running on linux to allow NoSandbox option on Rod luncher
 }
 
 // Generate pdf file from multible html templates
@@ -32,7 +33,7 @@ func (g *Generator[T]) CreatePdf() error {
 		return err
 	}
 
-	l := launcher.New().Headless(true).Leakless(true)
+	l := launcher.New().Headless(true).Leakless(true).NoSandbox(g.Linux)
 	g.browser = rod.New().ControlURL(l.MustLaunch()).MustConnect()
 	defer g.browser.MustClose()
 
