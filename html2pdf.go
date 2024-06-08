@@ -3,6 +3,7 @@ package html2pdf
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,10 +58,15 @@ func (g *Generator[T]) CreatePdf() error {
 		g.PdfFiles = append(g.PdfFiles, pdfFilePath)
 	}
 
-	// Merge the PDF files
-	err = g.MergePDFs(g.PdfFiles, g.FinalPdf)
-	if err != nil {
-		return fmt.Errorf("error merging PDF files: %v", err.Error())
+	if !g.SingleHtmlFile {
+		// Merge the PDF files
+		err = g.MergePDFs(g.PdfFiles, g.FinalPdf)
+		if err != nil {
+			return fmt.Errorf("error merging PDF files: %v", err.Error())
+		}
+	} else {
+		output := fmt.Sprint("./" + g.FinalPdf)
+		copyFile(g.PdfFiles[0], output)
 	}
 
 	return nil
@@ -134,5 +140,35 @@ func (g *Generator[T]) MergePDFs(inputFiles []string, outputFile string) error {
 	if err != nil {
 		return fmt.Errorf("error merging PDF files: %v", err.Error())
 	}
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	// Open the source file
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	// Create the destination file
+	destFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	// Copy the content from source to destination
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// Flush file to disk
+	err = destFile.Sync()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
